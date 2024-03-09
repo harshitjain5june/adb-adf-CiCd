@@ -1,0 +1,16 @@
+parameters:
+- name: publishDirectory
+  type: string
+- name: feedname
+  type: string
+
+steps:
+  - task: UniversalPackages@0
+    displayName: "Publishing to AzDO Artifacts"
+    inputs:
+      command: publish
+      publishDirectory: '$(publishDirectory)'
+      vstsFeedPublish: "DAPS/${{ parameters.feedname }}"
+      vstsFeedPackagePublish: "${{ parameters.feedname }}"
+      packagePublishDescription: 'Databricks notebooks'
+      verbosity: 'Debug'

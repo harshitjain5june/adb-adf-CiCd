@@ -1,0 +1,62 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  - group: adb-deploy-group
+
+
+
+# # ####################################
+# # #BUILD STAGE FOR ADB NOTEBOOK DEV
+# # ####################################
+
+- stage: Build_ADB_Dev
+    variables:
+    displayName: Building databricks notebook Artifact in Dev
+    jobs:
+      - job: Creating
+        displayName: Creating Artifact in Dev
+        steps:
+          - template: ci-cd/adb-cicd/adb-build.yml
+            parameters:
+              publishDirectory: "$(publishDirectory)"
+              feedname: "$(feedname-dev)"
+
+
+  # # ####################################
+  # # #RELEASE STAGE FOR ADB NOTEBOOK DEV
+  # # ####################################
+
+  # # # Dev Deployment
+
+  - stage: ADB_DEV_Release
+    displayName: Deploying databricks notebook in DEV Workspace 
+    dependsOn: Build_ADB_Dev
+    condition: succeeded('Build_ADB_Dev')
+    jobs:
+      - job: null
+        displayName: Deploying to DEV
+        pool:
+          vmImage: windows-latest
+        steps:
+          - task: PowerShell@2
+            inputs:
+              targetType: inline
+              script: |
+                Write-Host $(reposPath)
+          - template: ci-cd/adb-cicd/adb-deploy.yml
+            parameters:
+              publishDirectory: $(publishDirectory)
+              feedname: $(feedname-dev)
+              KeyVaultName: $(KeyVaultNameDev)
+              ConnectedServiceName: $(ConnectedServiceName)
+              region: $(region)
+              databricksPath: $(databricksPath)
+              SourcesDirectory: $(Build.SourcesDirectory)
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              reposPath: $(reposPath)
+              branchName: $(branchName)
+              DATABRICKS_ADDRESS: $(DATABRICKS_ADDRESS_Dev)
+              secretName: $(ADBSecretDev)

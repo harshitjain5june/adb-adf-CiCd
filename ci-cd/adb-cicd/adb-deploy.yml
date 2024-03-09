@@ -1,0 +1,55 @@
+parameters:
+- name: KeyVaultName
+  type: string
+- name: publishDirectory
+  type: string
+- name: ConnectedServiceName
+  type: string
+- name: region
+  type: string
+- name: feedname
+  type: string
+- name: databricksPath
+  type: string
+- name: SourcesDirectory
+  type: string
+- name: workingDirectory
+  type: string
+- name: reposPath
+  type: string
+- name: branchName
+  type: string
+- name: DATABRICKS_ADDRESS
+  type: string
+- name: secretName
+  type: string
+
+
+
+steps:
+
+
+- task: UniversalPackages@0
+  displayName: 'Downloading latest Databricks Artifact'
+  inputs:
+    command: 'download'
+    vstsFeed: "DAPS/${{ parameters.feedname }}"
+    vstsFeedPackage: "${{ parameters.feedname }}"
+    vstsPackageVersion: '*'
+    downloadDirectory: "${{ parameters.SourcesDirectory }}/${{ parameters.publishDirectory }}"
+    verbosity: 'Debug'
+    
+- task: AzureKeyVault@1
+  inputs:
+    ConnectedServiceName: "${{ parameters.ConnectedServiceName }}"
+    KeyVaultName: "${{ parameters.KeyVaultName }}"
+    SecretsFilter: ${{ parameters.secretName }}
+    runAsPreJob: false
+
+- task: databricksDeployScripts@0
+  inputs:
+    authMethod: 'bearer'
+    bearerToken: $(pid7bb5-adbdevtoken)
+    region: "${{ parameters.region }}"
+    localPath: "${{ parameters.SourcesDirectory }}/${{ parameters.publishDirectory }}"
+    databricksPath: "${{ parameters.databricksPath }}"
